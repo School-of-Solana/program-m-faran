@@ -1,6 +1,6 @@
 # Project Description
 
-**Deployed Frontend URL:** *[INSERT_YOUR_VERCEL_OR_HOSTED_URL_HERE]*
+**Deployed Frontend URL:** *[https://voting-solana-frontend.vercel.app/]*
 **Solana Program ID:** `EkhBeXScKHxKRbBud3mqCpK4aE7dnpNfCFKoPCDeCBDH`
 
 ---
