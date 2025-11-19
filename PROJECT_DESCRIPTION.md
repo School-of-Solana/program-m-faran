@@ -1,79 +1,128 @@
 # Project Description
 
-**Deployed Frontend URL:** [TODO: Link to your deployed frontend]
+**Deployed Frontend URL:** *[INSERT_YOUR_VERCEL_OR_HOSTED_URL_HERE]*
+**Solana Program ID:** `EkhBeXScKHxKRbBud3mqCpK4aE7dnpNfCFKoPCDeCBDH`
 
-**Solana Program ID:** [TODO: Your deployed program's public key]
+---
 
 ## Project Overview
 
 ### Description
-[TODO: Provide a comprehensive description of your dApp. Explain what it does. Be detailed about the core functionality.]
+
+A decentralized voting application implementing the **D21 (Janeček) Voting Method** on the Solana blockchain. Unlike traditional "one person, one vote" systems, D21 allows voters to cast multiple votes for different candidates (but only one per candidate) to maximize consensus in a group.
+
+This Single-Winner implementation automatically calculates how many votes each voter gets based on the number of candidates running. It includes time-locked elections, anti-double-voting security, and transparent on-chain tallying.
 
 ### Key Features
-[TODO: List the main features of your dApp. Be specific about what users can do.]
 
-- Feature 1: [Description]
-- Feature 2: [Description]
-- ...
-  
+* **Consensus Voting Logic**: Automatically assigns 1, 2, or 3 votes per voter depending on the number of candidates (e.g., 7+ candidates → 3 votes).
+* **Time-Locked Elections**: Voting is restricted to a specific start and end time.
+* **Sybil Resistance**: PDAs prevent double voting or exceeding vote limits.
+* **Admin Controls**: Election authority can initialize ballots and perform the final tally.
+* **Real-Time Dashboard**: React/Tailwind UI for creating elections, viewing stats, and voting.
+
 ### How to Use the dApp
-[TODO: Provide step-by-step instructions for users to interact with your dApp]
 
-1. **Connect Wallet**
-2. **Main Action 1:** [Step-by-step instructions]
-3. **Main Action 2:** [Step-by-step instructions]
-4. ...
+1. **Connect Wallet** (Phantom/Solflare on Devnet).
+2. **Create Election** as an admin by entering candidates and duration.
+3. **Vote** by selecting allowed candidates (up to the system-calculated limit).
+4. **Tally** the final result after the election ends.
+
+---
 
 ## Program Architecture
-[TODO: Describe your Solana program's architecture. Explain the main instructions, account structures, and data flow.]
+
+The program uses structured account types and PDAs to ensure secure, rule-enforced voting.
 
 ### PDA Usage
-[TODO: Explain how you implemented Program Derived Addresses (PDAs) in your project. What seeds do you use and why?]
+
+PDAs track voter activity to prevent double voting.
 
 **PDAs Used:**
-- PDA 1: [Purpose and description]
-- PDA 2: [Purpose and description]
 
-### Program Instructions
-[TODO: List and describe all the instructions in your Solana program]
+* **Voter State PDA**
+  **Seeds:** `["voter", user_pubkey, election_pubkey]`
+  **Purpose:** Records number of votes used and which candidates were selected.
 
-**Instructions Implemented:**
-- Instruction 1: [Description of what it does]
-- Instruction 2: [Description of what it does]
-- ...
+---
 
-### Account Structure
-[TODO: Describe your main account structures and their purposes]
+## Program Instructions
+
+### Implemented Instructions
+
+* **Initialize Election**
+  Creates election account, sets timing, and determines allowed votes per voter.
+
+* **Cast Vote**
+  Validates timing, vote count, and prevents duplicate selections.
+
+* **Tally Results**
+  Calculates the winning candidate after the end timestamp and freezes the election.
+
+---
+
+## Account Structure
+
+### Election Account (Global State)
 
 ```rust
-// Example account structure (replace with your actual structs)
 #[account]
-pub struct YourAccountName {
-    // Describe each field
+pub struct ElectionAccount {
+    pub authority: Pubkey,
+    pub start_timestamp: i64,
+    pub end_timestamp: i64,
+    pub votes_per_voter: u8,
+    pub is_finalized: bool,
+    pub winner_index: Option<u8>,
+    pub candidates: Vec<Candidate>, 
 }
 ```
+
+### Voter State Account (Individual Ballot)
+
+```rust
+#[account]
+pub struct VoterStateAccount {
+    pub voter_pubkey: Pubkey,
+    pub election_pubkey: Pubkey,
+    pub votes_cast_count: u8,
+    pub voted_for_indices: Vec<u8>,
+}
+```
+
+---
 
 ## Testing
 
 ### Test Coverage
-[TODO: Describe your testing approach and what scenarios you covered]
 
-**Happy Path Tests:**
-- Test 1: [Description]
-- Test 2: [Description]
-- ...
+The project includes a comprehensive TypeScript test suite covering all instructions in the D21 voting logic.
 
-**Unhappy Path Tests:**
-- Test 1: [Description of error scenario]
-- Test 2: [Description of error scenario]
-- ...
+#### ✔️ Happy Path
+
+* Elections initialize correctly with proper vote-per-voter rules.
+* Partial then full voting is supported.
+* Admin can finalize elections and winner is computed correctly.
+
+#### ❌ Unhappy Path
+
+* Over-voting attempts fail.
+* Duplicate candidate votes fail.
+* Voting outside time window fails.
+* Unauthorized tally attempts fail.
+* Oversized candidate names are rejected.
 
 ### Running Tests
+
 ```bash
-# Commands to run your tests
+npm install
 anchor test
 ```
 
-### Additional Notes for Evaluators
+---
 
-[TODO: Add any specific notes or context that would help evaluators understand your project better]
+## Additional Notes for Evaluators
+
+This was my first Solana dApp and the learning curve was steep! 
+
+---
